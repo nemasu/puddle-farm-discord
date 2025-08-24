@@ -36,12 +36,11 @@ async def handle_single_player(results, name, user, server, channel):
     urls = []
 
     for result in results:
-        if result['deviation'] < 100.0:
-            url = f"https://puddle.farm/player/{player_id}/{result['char_short']}"
-            urls.append(url)
+          url = f"https://puddle.farm/player/{player_id}/{result['char_short']}"
+          urls.append(url)
 
     logger.info(f"/rating {name} | User: {user} | Server: {server} | Channel: {channel} | Status: Success - Single player")
-    highest_rating = max(results, key=lambda x: x['rating']-x['deviation'])
+    highest_rating = max(results, key=lambda x: x['rating'])
     url = f"https://puddle.farm/player/{player_id}/{highest_rating['char_short']}"
     return url
 
@@ -50,24 +49,27 @@ async def handle_multiple_players(results, name, user, server, channel):
     player_best = {}
     for result in results:
         player_id = result['id']
-        effective_rating = result['rating'] - result['deviation']
+        effective_rating = result['rating']
         
         if (player_id not in player_best or 
-            effective_rating > player_best[player_id]['rating'] - player_best[player_id]['deviation']):
+            effective_rating > player_best[player_id]['rating']):
             player_best[player_id] = result
     
     sorted_results = sorted(
         player_best.values(), 
-        key=lambda x: x['rating'] - x['deviation'],
+        key=lambda x: x['rating'],
         reverse=True
     )[:5]
 
     urls = []
     for result in sorted_results:
         player_id = result['id']
-        rating_str = f"{round(result['rating'])}±{round(result['deviation'])}"
+        rating_str = f"{round(result['rating'])}"
         url = f"{result['name']}: {result['char_short']} {rating_str}"
         urls.append(url)
+        # player_id = result['id']
+        # url = f"https://puddle.farm/player/{player_id}/{result['char_short']}"
+        # urls.append(url)
     
     logger.info(f"/rating {name} | User: {user} | Server: {server} | Channel: {channel} | Status: Success - Top 5 unique players")
     return 'Top 5 Results for ' + name + ':\n' + '\n'.join(urls)
